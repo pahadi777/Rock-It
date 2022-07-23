@@ -2,7 +2,7 @@
 
 This app is made using **Kotlin** and can stream / download any song in 5 different qualities ranging from **(12 - 320) Kbps** and that too **without ads**
 
-Demo Video Link -> https://youtube.com/shorts/jD8oxncMwX0?feature=share
+Demo Video Link -> https://youtu.be/jD8oxncMwX0
 
 APK link -> https://drive.google.com/file/d/1nfscioENY7tIs8MknE6426e7ZEUT6kOY/view?usp=sharing
 
