@@ -1,6 +1,6 @@
 ## Rock It
 
-Stream and download any song you want in 5 different qualities ranging from (12 - 320) kbps that too without ads and absolutely free on Rock It
+This app is made using **Kotlin** and can stream / download any song in 5 different qualities ranging from **(12 - 320) kbps** and that too **without ads** .
 
 Demo Video Link -> https://youtube.com/shorts/jD8oxncMwX0?feature=share
 
