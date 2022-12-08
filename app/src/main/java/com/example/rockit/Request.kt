@@ -6,7 +6,7 @@ import retrofit2.converter.gson.GsonConverterFactory
 import retrofit2.http.GET
 import retrofit2.http.Query
 
-const val BASE_URL = "https://saavn.me/"
+const val BASE_URL = "https://jiosaavn-api-git-main-sumitkolhe.vercel.app/"
 
 interface Request
 {
@@ -14,7 +14,7 @@ interface Request
     fun getsongs() : Call<Response>
 
     @GET("search/songs")
-    fun searchsongs(@Query("query") query: String , @Query("limit") limit : Int) : Call<Searchsongs>
+    fun searchsongs(@Query("query") query: String , @Query("limit") limit : Int) : Call<Response>
 }
 
 object SongService

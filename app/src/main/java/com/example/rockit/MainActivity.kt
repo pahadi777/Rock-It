@@ -7,6 +7,7 @@ import android.content.SharedPreferences
 import android.content.pm.PackageManager
 import android.media.AudioManager
 import android.media.MediaPlayer
+import android.net.ConnectivityManager
 import android.net.Uri
 import android.os.Build
 import android.os.Bundle
@@ -48,12 +49,12 @@ class MainActivity : AppCompatActivity(),MusicAdapter.OnItemClick,PopupMenu.OnMe
     private val PAUSED : Byte = 0
     private val PLAYING : Byte = 1
     private var state : Byte = -1
-//    val lessweight = LinearLayout.LayoutParams( LinearLayout.LayoutParams.MATCH_PARENT, LinearLayout.LayoutParams.MATCH_PARENT, 3.5f )
-//    val moreweight = LinearLayout.LayoutParams( LinearLayout.LayoutParams.MATCH_PARENT, LinearLayout.LayoutParams.MATCH_PARENT, 4f )
     private lateinit var popupmenu : PopupMenu
     private lateinit var sharedPreferences : SharedPreferences
     private var quality : Int = 4
     private lateinit var alertDialog : AlertDialog
+    private var connection : Boolean = true
+//    private lateinit var context: Context
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -91,14 +92,12 @@ class MainActivity : AppCompatActivity(),MusicAdapter.OnItemClick,PopupMenu.OnMe
                     binding.recyclerview.adapter = topsongsadapter
                     binding.details.visibility = View.VISIBLE
                     binding.nosong.visibility = View.GONE
-//                    binding.bottom.layoutParams = lessweight
                     binding.recyclerview.visibility = View.VISIBLE
                 }
                 else
                 {
                     startshimmer()
                     searchsongs(text,50)
-//                    binding.bottom.layoutParams = moreweight
                 }
             }
         })
@@ -156,9 +155,9 @@ class MainActivity : AppCompatActivity(),MusicAdapter.OnItemClick,PopupMenu.OnMe
                 binding.recyclerview.adapter = topsongsadapter
                 binding.details.visibility = View.VISIBLE
                 binding.nosong.visibility = View.GONE
-//                binding.bottom.layoutParams = lessweight
                 binding.recyclerview.visibility = View.VISIBLE
             }
+            checkConnection()
             handler.postDelayed(runnable,100)
         }
 
@@ -203,7 +202,7 @@ class MainActivity : AppCompatActivity(),MusicAdapter.OnItemClick,PopupMenu.OnMe
                 val response = r.body()
                 if(response!=null)
                 {
-                    topsongs.addAll(response.results.songs)
+                    topsongs.addAll(response.data.songs)
                     topsongsadapter.notifyDataSetChanged()
                     stopshimmer()
                     binding.details.visibility = View.VISIBLE
@@ -212,7 +211,6 @@ class MainActivity : AppCompatActivity(),MusicAdapter.OnItemClick,PopupMenu.OnMe
 
             override fun onFailure(call: Call<Response>, t: Throwable)
             {
-//                Toast.makeText(this@MainActivity,t.message, Toast.LENGTH_SHORT).show()
                 stopshimmer()
                 binding.details.visibility = View.VISIBLE
             }
@@ -221,15 +219,14 @@ class MainActivity : AppCompatActivity(),MusicAdapter.OnItemClick,PopupMenu.OnMe
 
     private fun searchsongs(query : String , limit : Int)
     {
-        Log.d("calling","true")
         val result = SongService.SongInstance.searchsongs(query,limit)
-        result.enqueue(object : Callback<Searchsongs> {
-            override fun onResponse(call: Call<Searchsongs>, r : retrofit2.Response<Searchsongs>)
+        result.enqueue(object : Callback<Response> {
+            override fun onResponse(call: Call<Response>, r : retrofit2.Response<Response>)
             {
                 val response = r.body()
                 if(response!=null)
                 {
-                    val tempsongs = response.results
+                    val tempsongs = response.data.results
                     stopshimmer()
                     binding.details.visibility = View.GONE
                     searchsongs.clear()
@@ -249,9 +246,8 @@ class MainActivity : AppCompatActivity(),MusicAdapter.OnItemClick,PopupMenu.OnMe
                 }
             }
 
-            override fun onFailure(call: Call<Searchsongs>, t: Throwable)
+            override fun onFailure(call: Call<Response>, t: Throwable)
             {
-//                Toast.makeText(this@MainActivity,""+t.message,Toast.LENGTH_LONG).show()
                 stopshimmer()
                 binding.details.visibility = View.GONE
             }
@@ -291,7 +287,6 @@ class MainActivity : AppCompatActivity(),MusicAdapter.OnItemClick,PopupMenu.OnMe
         binding.current.text = "00:00"
         binding.total.text = "00:00"
         binding.seekBar.progress = 0
-//        Toast.makeText(this,""+quality,Toast.LENGTH_SHORT).show()
         mediaPlayer.setDataSource(song.downloadUrl[quality].link)
         mediaPlayer.prepareAsync()
         mediaPlayer.setOnPreparedListener {
@@ -319,11 +314,11 @@ class MainActivity : AppCompatActivity(),MusicAdapter.OnItemClick,PopupMenu.OnMe
     private fun showdialog(song : Songs)
     {
         var filename = song.name.replace(" ","_") + "_" + song.primaryArtists.replace(", ","_").replace(" ","_") + "_"
-        if(quality==0) filename+="12_KBPS.mp3"
-        else if(quality==1) filename+="48_KBPS.mp3"
-        else if(quality==2) filename+="96_KBPS.mp3"
-        else if(quality==3) filename+="160_KBPS.mp3"
-        else filename+="320_KBPS.mp3"
+        if(quality==0) filename+="12_KBPS.m4a"
+        else if(quality==1) filename+="48_KBPS.m4a"
+        else if(quality==2) filename+="96_KBPS.m4a"
+        else if(quality==3) filename+="160_KBPS.m4a"
+        else filename+="320_KBPS.m4a"
 
         alertDialog = AlertDialog.Builder(this)
             .setTitle("Download")
@@ -436,4 +431,27 @@ class MainActivity : AppCompatActivity(),MusicAdapter.OnItemClick,PopupMenu.OnMe
         mediaPlayer.release()
     }
 
+    fun isConnected() : Boolean
+    {
+        val connectivityManager =  applicationContext.getSystemService(Context.CONNECTIVITY_SERVICE) as ConnectivityManager
+        return if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+            connectivityManager.activeNetwork!=null && connectivityManager.activeNetworkInfo!!.isConnectedOrConnecting
+        } else return true
+    }
+
+    private fun checkConnection() {
+        if(!connection && isConnected())
+        {
+            getsongs()
+            connection = true
+            binding.NoInternet.visibility = View.GONE
+            binding.bottom.visibility = View.VISIBLE
+        }
+        else if(connection && !isConnected())
+        {
+            connection = false
+            binding.NoInternet.visibility = View.VISIBLE
+            binding.bottom.visibility = View.GONE
+        }
+    }
 }
